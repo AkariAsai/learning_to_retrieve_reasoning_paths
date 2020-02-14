@@ -4,7 +4,7 @@ Our reader model is based on BERT QA model ([Devlin et al. 2019](https://arxiv.o
 
 Table of contents:
 - <a href="#1-training">1. Training</a>
-- <a href="#2-inference">2. Inference</a>
+- <a href="#2-evaluation">2. Evaluation</a>
 
 ## 1. Training
 ### Training data
