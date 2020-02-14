@@ -1,0 +1,10 @@
+*.DS_Store
+*.zip
+*.pyc
+*.json
+*.tsv
+*.csv
+*.db
+*.bin
+*.npz
+__pycache__/
