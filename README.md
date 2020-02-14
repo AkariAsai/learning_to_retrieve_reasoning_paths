@@ -164,7 +164,7 @@ python eval_main.py \
 --bert_model bert-base-uncased --do_lower_case --tfidf_limit 20 --eval_batch_size 4 --pruning_by_links --beam 8 --max_para_num 2000 --use_full_article --tagme --tagme_api_key YOUR_API_KEY
 ```
 
-*We are currently reorganizing some codes related to natural questions evaluations, which might give slightly lower scores than the reported results. We’ll fix the issue soon.*
+*The implementation of the two-step TF-IDF retrieval module (article retrieval --> paragraph-level re-ranking) for Natural Questions is currently in progress, which might give slightly lower scores than the reported results in our paper. We'll fix the issue soon.*
 
 ## 4. Interactive demo
 You could run interactive demo and ask open-domain questions. Our model answers the question with supporting facts. 

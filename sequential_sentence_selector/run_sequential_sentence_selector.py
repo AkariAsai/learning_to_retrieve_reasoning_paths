@@ -25,11 +25,12 @@ except:
 
 import json
 
-logging.basicConfig(format = '%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
-                    datefmt = '%m/%d/%Y %H:%M:%S',
-                    level = logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
+                    datefmt='%m/%d/%Y %H:%M:%S',
+                    level=logging.INFO)
 logger = logging.getLogger(__name__)
-        
+
+
 class InputExample(object):
     """A single training/test example for simple sequence classification."""
 
@@ -41,7 +42,8 @@ class InputExample(object):
         self.titles = t
         self.context = c
         self.supporting_facts = sf
-        
+
+
 class InputFeatures(object):
     """A single set of features of data."""
 
@@ -56,11 +58,12 @@ class InputFeatures(object):
 
         self.ex_index = ex_index
 
+
 class DataProcessor:
 
     def get_train_examples(self, file_name):
         return self.create_examples(json.load(open(file_name, 'r')))
-        
+
     def create_examples(self, jsn):
         examples = []
         max_sent_num = 0
@@ -68,17 +71,20 @@ class DataProcessor:
             guid = data['q_id']
             question = data['question']
             titles = data['titles']
-            context = data['context'] # {title: [s1, s2, ...]}
-            supporting_facts = data['supporting_facts'] # {title: [index1, index2, ...]}
+            context = data['context']  # {title: [s1, s2, ...]}
+            # {title: [index1, index2, ...]}
+            supporting_facts = data['supporting_facts']
 
-            max_sent_num = max(max_sent_num, sum([len(context[title]) for title in context]))
-            
-            examples.append(InputExample(guid, question, data['answer'], titles, context, supporting_facts))
+            max_sent_num = max(max_sent_num, sum(
+                [len(context[title]) for title in context]))
+
+            examples.append(InputExample(
+                guid, question, data['answer'], titles, context, supporting_facts))
 
         return examples
 
 
-def convert_examples_to_features(examples, max_seq_length, max_sent_num, max_sf_num, tokenizer, train = False):
+def convert_examples_to_features(examples, max_seq_length, max_sent_num, max_sf_num, tokenizer, train=False):
     """Loads a data file into a list of `InputBatch`s."""
 
     DUMMY = [0] * max_seq_length
@@ -86,27 +92,31 @@ def convert_examples_to_features(examples, max_seq_length, max_sent_num, max_sf_
     features = []
     logger.info('#### Constructing features... ####')
     for (ex_index, example) in enumerate(tqdm(examples, desc='Example')):
-        
-        tokens_q = tokenizer.tokenize('Q: {} A: {}'.format(example.question, example.answer))
+
+        tokens_q = tokenizer.tokenize(
+            'Q: {} A: {}'.format(example.question, example.answer))
         tokens_q = ['[CLS]'] + tokens_q + ['[SEP]']
 
         input_ids = []
         input_masks = []
         segment_ids = []
-        
+
         for title in example.titles:
             sents = example.context[title]
             for (i, s) in enumerate(sents):
 
                 if len(input_ids) == max_sent_num:
                     break
-                
-                tokens_s = tokenizer.tokenize(s)[:max_seq_length-len(tokens_q)-1]
+
+                tokens_s = tokenizer.tokenize(
+                    s)[:max_seq_length-len(tokens_q)-1]
                 tokens_s = tokens_s + ['[SEP]']
 
-                padding = [0] * (max_seq_length - len(tokens_s) - len(tokens_q))
+                padding = [0] * (max_seq_length -
+                                 len(tokens_s) - len(tokens_q))
 
-                input_ids_ = tokenizer.convert_tokens_to_ids(tokens_q + tokens_s)
+                input_ids_ = tokenizer.convert_tokens_to_ids(
+                    tokens_q + tokens_s)
                 input_masks_ = [1] * len(input_ids_)
                 segment_ids_ = [0] * len(tokens_q) + [1] * len(tokens_s)
 
@@ -125,7 +135,7 @@ def convert_examples_to_features(examples, max_seq_length, max_sent_num, max_sf_
 
         target_ids = []
         target_offset = 0
-                
+
         for title in example.titles:
             sfs = example.supporting_facts[title]
             for i in sfs:
@@ -134,7 +144,8 @@ def convert_examples_to_features(examples, max_seq_length, max_sent_num, max_sf_
                 else:
                     logger.warning('')
                     logger.warning('Invalid annotation: {}'.format(sfs))
-                    logger.warning('Invalid annotation: {}'.format(example.context[title]))
+                    logger.warning('Invalid annotation: {}'.format(
+                        example.context[title]))
 
             target_offset += len(example.context[title])
 
@@ -144,7 +155,8 @@ def convert_examples_to_features(examples, max_seq_length, max_sent_num, max_sf_
         num_sents = len(input_ids)
         num_sfs = len(target_ids)
 
-        output_masks = [([1.0] * len(input_ids) + [0.0] * (max_sent_num - len(input_ids) + 1)) for _ in range(max_sent_num + 2)]
+        output_masks = [([1.0] * len(input_ids) + [0.0] * (max_sent_num -
+                                                           len(input_ids) + 1)) for _ in range(max_sent_num + 2)]
 
         if train:
 
@@ -162,24 +174,24 @@ def convert_examples_to_features(examples, max_seq_length, max_sent_num, max_sf_
 
         else:
             for i in range(len(input_ids)):
-                output_masks[i+1][i] = 0.0            
+                output_masks[i+1][i] = 0.0
 
         target_ids += [0] * (max_sf_num - len(target_ids))
-                    
+
         padding = [DUMMY] * (max_sent_num - len(input_ids))
         input_ids += padding
         input_masks += padding
         segment_ids += padding
 
         features.append(
-                InputFeatures(input_ids=input_ids,
-                              input_masks=input_masks,
-                              segment_ids=segment_ids,
-                              target_ids = target_ids,
-                              output_masks = output_masks,
-                              num_sents = num_sents,
-                              num_sfs = num_sfs,
-                              ex_index = ex_index))
+            InputFeatures(input_ids=input_ids,
+                          input_masks=input_masks,
+                          segment_ids=segment_ids,
+                          target_ids=target_ids,
+                          output_masks=output_masks,
+                          num_sents=num_sents,
+                          num_sfs=num_sfs,
+                          ex_index=ex_index))
 
     logger.info('Done!')
 
@@ -190,6 +202,7 @@ def warmup_linear(x, warmup=0.002):
     if x < warmup:
         return x/warmup
     return 1.0 - x
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -206,12 +219,11 @@ def main():
                         help="The output directory where the model predictions and checkpoints will be written.")
 
     parser.add_argument("--train_file_path",
-                        type = str,
-                        default = None,
-                        required = True,
+                        type=str,
+                        default=None,
+                        required=True,
                         help="File path to training data")
 
-    
     ## Other parameters
     parser.add_argument("--max_seq_length",
                         default=256,
@@ -261,15 +273,16 @@ def main():
                         default=1,
                         help="Number of updates steps to accumulate before performing a backward/update pass.")
 
-
     args = parser.parse_args()
 
     cpu = torch.device('cpu')
-    
-    device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+
+    device = torch.device("cuda" if torch.cuda.is_available()
+                          and not args.no_cuda else "cpu")
     n_gpu = torch.cuda.device_count()
 
-    args.train_batch_size = int(args.train_batch_size / args.gradient_accumulation_steps)
+    args.train_batch_size = int(
+        args.train_batch_size / args.gradient_accumulation_steps)
 
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -278,28 +291,33 @@ def main():
         torch.cuda.manual_seed_all(args.seed)
 
     if os.path.exists(args.output_dir) and os.listdir(args.output_dir):
-        raise ValueError("Output directory ({}) already exists and is not empty.".format(args.output_dir))
+        raise ValueError(
+            "Output directory ({}) already exists and is not empty.".format(args.output_dir))
     os.makedirs(args.output_dir, exist_ok=True)
 
     processor = DataProcessor()
 
     # Prepare model
     if args.bert_model != 'bert-large-uncased-whole-word-masking':
-        tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=args.do_lower_case)
+        tokenizer = BertTokenizer.from_pretrained(
+            args.bert_model, do_lower_case=args.do_lower_case)
 
         model = BertForSequentialSentenceSelector.from_pretrained(args.bert_model,
-                                                               cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))
+                                                                  cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))
     else:
         model = BertForSequentialSentenceSelector.from_pretrained('bert-large-uncased',
-                                                               cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))
+                                                                  cache_dir=PYTORCH_PRETRAINED_BERT_CACHE / 'distributed_{}'.format(-1))
         from utils import get_bert_model_from_pytorch_transformers
-        
-        state_dict, vocab_file = get_bert_model_from_pytorch_transformers(args.bert_model)
-        model.bert.load_state_dict(state_dict)
-        tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=args.do_lower_case)
 
-        logger.info('The {} model is successfully loaded!'.format(args.bert_model))
-        
+        state_dict, vocab_file = get_bert_model_from_pytorch_transformers(
+            args.bert_model)
+        model.bert.load_state_dict(state_dict)
+        tokenizer = BertTokenizer.from_pretrained(
+            vocab_file, do_lower_case=args.do_lower_case)
+
+        logger.info(
+            'The {} model is successfully loaded!'.format(args.bert_model))
+
     model.to(device)
     if n_gpu > 1:
         model = torch.nn.DataParallel(model)
@@ -310,13 +328,13 @@ def main():
 
     POSITIVE = 1.0
     NEGATIVE = 0.0
-    
+
     # Load training examples
     train_examples = None
     num_train_steps = None
     train_examples = processor.get_train_examples(args.train_file_path)
     train_features = convert_examples_to_features(
-        train_examples, args.max_seq_length, args.max_sent_num, args.max_sf_num, tokenizer, train = True)
+        train_examples, args.max_seq_length, args.max_sent_num, args.max_sf_num, tokenizer, train=True)
 
     num_train_steps = int(
         len(train_features) / args.train_batch_size / args.gradient_accumulation_steps * args.num_train_epochs)
@@ -325,29 +343,38 @@ def main():
     param_optimizer = list(model.named_parameters())
     no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
     optimizer_grouped_parameters = [
-        {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
-        {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-        ]
+        {'params': [p for n, p in param_optimizer if not any(
+            nd in n for nd in no_decay)], 'weight_decay': 0.01},
+        {'params': [p for n, p in param_optimizer if any(
+            nd in n for nd in no_decay)], 'weight_decay': 0.0}
+    ]
     t_total = num_train_steps
 
     optimizer = BertAdam(optimizer_grouped_parameters,
                          lr=args.learning_rate,
                          warmup=args.warmup_proportion,
                          t_total=t_total,
-                         max_grad_norm = 1.0)
+                         max_grad_norm=1.0)
 
     logger.info("***** Running training *****")
     logger.info("  Num examples = %d", len(train_features))
     logger.info("  Batch size = %d", args.train_batch_size)
     logger.info("  Num steps = %d", num_train_steps)
 
-    all_input_ids = torch.tensor([f.input_ids for f in train_features], dtype=torch.long)
-    all_input_masks = torch.tensor([f.input_masks for f in train_features], dtype=torch.long)
-    all_segment_ids = torch.tensor([f.segment_ids for f in train_features], dtype=torch.long)
-    all_target_ids = torch.tensor([f.target_ids for f in train_features], dtype=torch.long)
-    all_output_masks = torch.tensor([f.output_masks for f in train_features], dtype=torch.float)
-    all_num_sents = torch.tensor([f.num_sents for f in train_features], dtype=torch.long)
-    all_num_sfs = torch.tensor([f.num_sfs for f in train_features], dtype=torch.long)
+    all_input_ids = torch.tensor(
+        [f.input_ids for f in train_features], dtype=torch.long)
+    all_input_masks = torch.tensor(
+        [f.input_masks for f in train_features], dtype=torch.long)
+    all_segment_ids = torch.tensor(
+        [f.segment_ids for f in train_features], dtype=torch.long)
+    all_target_ids = torch.tensor(
+        [f.target_ids for f in train_features], dtype=torch.long)
+    all_output_masks = torch.tensor(
+        [f.output_masks for f in train_features], dtype=torch.float)
+    all_num_sents = torch.tensor(
+        [f.num_sents for f in train_features], dtype=torch.long)
+    all_num_sfs = torch.tensor(
+        [f.num_sfs for f in train_features], dtype=torch.long)
     train_data = TensorDataset(all_input_ids,
                                all_input_masks,
                                all_segment_ids,
@@ -356,7 +383,8 @@ def main():
                                all_num_sents,
                                all_num_sfs)
     train_sampler = RandomSampler(train_data)
-    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=args.train_batch_size)
+    train_dataloader = DataLoader(
+        train_data, sampler=train_sampler, batch_size=args.train_batch_size)
 
     model.train()
     epc = 0
@@ -365,7 +393,7 @@ def main():
         nb_tr_examples, nb_tr_steps = 0, 0
         for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
             input_masks = batch[1]
-            batch_max_len = input_masks.sum(dim = 2).max().item()
+            batch_max_len = input_masks.sum(dim=2).max().item()
 
             target_ids = batch[3]
 
@@ -375,7 +403,8 @@ def main():
             num_sfs = batch[6]
             batch_max_sf_num = num_sfs.max().item()
 
-            output_masks_cpu = (batch[4])[:, :batch_max_sf_num+1, :batch_max_sent_num+1]
+            output_masks_cpu = (batch[4])[
+                :, :batch_max_sf_num+1, :batch_max_sent_num+1]
 
             batch = tuple(t.to(device) for t in batch)
             input_ids, input_masks, segment_ids, _, output_masks, __, ___ = batch
@@ -385,21 +414,25 @@ def main():
             input_masks = input_masks[:, :batch_max_sent_num, :batch_max_len]
             segment_ids = segment_ids[:, :batch_max_sent_num, :batch_max_len]
             target_ids = target_ids[:, :batch_max_sf_num]
-            output_masks = output_masks[:, :batch_max_sf_num+1, :batch_max_sent_num+1] # 1 for EOE
+            # 1 for EOE
+            output_masks = output_masks[:,
+                                        :batch_max_sf_num+1, :batch_max_sent_num+1]
 
-            target = torch.FloatTensor(output_masks.size()).fill_(NEGATIVE) # (B, NUM_STEPS, |S|+1) <- 1 for EOE
+            target = torch.FloatTensor(output_masks.size()).fill_(
+                NEGATIVE)  # (B, NUM_STEPS, |S|+1) <- 1 for EOE
             for i in range(B):
-                output_masks[i, :num_sfs[i]+1, -1] = 1.0 # for EOE
+                output_masks[i, :num_sfs[i]+1, -1] = 1.0  # for EOE
                 target[i, num_sfs[i], -1].fill_(POSITIVE)
 
                 for j in range(num_sfs[i].item()):
                     target[i, j, target_ids[i, j]].fill_(POSITIVE)
             target = target.to(device)
 
-            loss = model(input_ids, segment_ids, input_masks, output_masks, target, target_ids, batch_max_sf_num)
+            loss = model(input_ids, segment_ids, input_masks,
+                         output_masks, target, target_ids, batch_max_sf_num)
 
             if n_gpu > 1:
-                loss = loss.mean() # mean() to average on multi-gpu.
+                loss = loss.mean()  # mean() to average on multi-gpu.
             if args.gradient_accumulation_steps > 1:
                 loss = loss / args.gradient_accumulation_steps
 
@@ -411,17 +444,21 @@ def main():
             nb_tr_steps += 1
             if (step + 1) % args.gradient_accumulation_steps == 0:
                 # modify learning rate with special warm up BERT uses
-                lr_this_step = args.learning_rate * warmup_linear(global_step/t_total, args.warmup_proportion)
+                lr_this_step = args.learning_rate * \
+                    warmup_linear(global_step/t_total, args.warmup_proportion)
                 for param_group in optimizer.param_groups:
                     param_group['lr'] = lr_this_step
                 optimizer.step()
                 optimizer.zero_grad()
                 global_step += 1
 
-        model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
-        output_model_file = os.path.join(args.output_dir, "pytorch_model_"+str(epc+1)+".bin")
+        model_to_save = model.module if hasattr(
+            model, 'module') else model  # Only save the model it-self
+        output_model_file = os.path.join(
+            args.output_dir, "pytorch_model_"+str(epc+1)+".bin")
         torch.save(model_to_save.state_dict(), output_model_file)
         epc += 1
+
 
 if __name__ == "__main__":
     main()
