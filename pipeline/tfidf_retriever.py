@@ -117,11 +117,11 @@ class TfidfRetriever:
         return context
     
     def get_abstract_tfidf(self,
-                           q_id: str,
-                           question: str,
-                           tfidf_top_k: int):
+                           q_id,
+                           question,
+                           args):
 
-        doc_names, _ = self.ranker.closest_docs(question, k=tfidf_top_k)
+        doc_names, _ = self.ranker.closest_docs(question, k=args.tfidf_limit)
         # Add TFIDF close documents
         context = self.load_abstract_para_text(doc_names)
 

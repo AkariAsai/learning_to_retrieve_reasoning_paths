@@ -1,7 +1,3 @@
-git clone https://github.com/AkariAsai/learning_to_retrieve_reasoning_paths.git
-cd learning_to_retrieve_reasoning_paths
-pip install -r requirements.txt
-
 # download trained models
 mkdir models
 cd models
@@ -29,6 +25,6 @@ python eval_main.py \
 --sequential_sentence_selector_path models/hotpot_models/sequential_sentence_selector/pytorch_model.bin \
 --tfidf_path models/hotpot_models/tfidf_retriever/wiki_open_full_new_db_intro_only-tfidf-ngram=2-hash=16777216-tokenizer=simple.npz \
 --db_path models/hotpot_models/wiki_db/wiki_abst_only_hotpotqa_w_original_title.db \
---bert_model bert-base-uncased --do_lower_case \
---tfidf_limit 500 --eval_batch_size 4 --pruning_by_links --beam 8 \
---max_para_num 2000 --sp_eval --sampled 
+--bert_model_sequential_sentence_selector bert-large-uncased --do_lower_case \
+--tfidf_limit 500 --eval_batch_size 4 --pruning_by_links --beam_graph_retriever 8 \
+--beam_sequential_sentence_selector 8 --max_para_num 2000 --sp_eval --sampled
