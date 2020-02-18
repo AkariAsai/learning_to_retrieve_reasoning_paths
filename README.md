@@ -107,15 +107,15 @@ If you set up using `quick_start_hotpot.sh`, you can run full evaluation by sett
 ```bash
 python eval_main.py \
 --eval_file_path data/hotpot/hotpot_fullwiki_data.jsonl \
---eval_file_path_sp data/hotpot/hotpot_dev_fullwiki_v1.json \
+--eval_file_path_sp data/hotpot/hotpot_dev_distractor_v1.json \
 --graph_retriever_path models/hotpot_models/graph_retriever_path/pytorch_model.bin \
 --reader_path models/hotpot_models/reader \
 --sequential_sentence_selector_path models/hotpot_models/sequential_sentence_selector/pytorch_model.bin \
 --tfidf_path models/hotpot_models/tfidf_retriever/wiki_open_full_new_db_intro_only-tfidf-ngram=2-hash=16777216-tokenizer=simple.npz \
 --db_path models/hotpot_models/wiki_db/wiki_abst_only_hotpotqa_w_original_title.db \
---bert_model bert-base-uncased --do_lower_case \
---tfidf_limit 500 --eval_batch_size 4 --pruning_by_links --beam 8 \
---max_para_num 2000 --sp_eval
+--bert_model_sequential_sentence_selector bert-large-uncased --do_lower_case \
+--tfidf_limit 500 --eval_batch_size 4 --pruning_by_links --beam_graph_retriever 8 \
+--beam_sequential_sentence_selector 8 --max_para_num 2000 --sp_eval
 ```
 
 The evaluation will give us the following results (equivalent to our reported results):
@@ -133,8 +133,8 @@ python eval_main.py \
 --tfidf_path DrQA/data/wikipedia/docs-tfidf-ngram=2-hash=16777216-tokenizer=simple.npz \
 --db_path DrQA/data/wikipedia/docs.db \
 --bert_model bert-base-uncased --do_lower_case \
---tfidf_limit 50 --eval_batch_size 4 --pruning_by_links \
---beam 8 --max_para_num 2000 --use_full_article 
+--tfidf_limit 50 --eval_batch_size 4 \
+--beam_graph_retriever 8 --max_para_num 2000 --use_full_article 
 ```
 
 #### Natural Questions
@@ -145,7 +145,8 @@ python eval_main.py \
 --graph_retriever_path models/nq/selector/pytorch_model.bin --reader_path models/nq/reader/ \
 --tfidf_path models/nq_models/tfidf_retriever/wiki_20181220_nq_hyper_linked-tfidf-ngram=2-hash=16777216-tokenizer=simple.npz \
 --db_path models/nq_models/wiki_db/wiki_20181220_nq_hyper_linked.db \
---bert_model bert-base-uncased --do_lower_case --tfidf_limit 20 --eval_batch_size 4 --pruning_by_links --beam 8 --max_para_num 2000 --use_full_article 
+--bert_model bert-base-uncased --do_lower_case --tfidf_limit 20 --eval_batch_size 4 --pruning_by_links \
+--beam_graph_retriever 8 --max_para_num 2000 --use_full_article 
 ```
 
 #### (optional) Using TagMe for initial retrieval
