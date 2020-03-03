@@ -41,7 +41,7 @@ class ODQA:
         tfidf_retrieval_output = []
         for i in range(len(questions)):
             question = questions[i]
-            tfidf_retrieval_output += self.tfidf_retriever.get_abstract_tfidf('DEMO_{}'.format(i), question, self.args.tfidf_limit)
+            tfidf_retrieval_output += self.tfidf_retriever.get_abstract_tfidf('DEMO_{}'.format(i), question, self.args)
 
         print('-- Running the graph-based recurrent retriever model...', flush=True)
         graph_retrieval_output = self.graph_retriever.predict(tfidf_retrieval_output, self.tfidf_retriever, self.args)
