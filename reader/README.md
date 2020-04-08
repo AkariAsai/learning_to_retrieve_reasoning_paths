@@ -14,8 +14,8 @@ To train our reader, we first convert the original MRC datasets into SQuAD (v.2)
 We provide the pre-processed train and dev data files for all three datasets here (google drive):
 
 - [HotpotQA reader train data](https://drive.google.com/open?id=1BZXSZXN99Mb7--4u0x58cixBTon1PX8N)
-- [SQuAD reader train data](https://drive.google.com/open?id=186kFXd_g0pGJz12-E_sHvBVX6QrnyrzE)
-- [Natural Questions train data](https://drive.google.com/open?id=1aMTXIxYZCAC6sX5mZt6nytYxeKvjuigq)
+- [SQuAD reader train data](https://drive.google.com/open?id=1aMTXIxYZCAC6sX5mZt6nytYxeKvjuigq)
+- [Natural Questions train data](https://drive.google.com/open?id=186kFXd_g0pGJz12-E_sHvBVX6QrnyrzE)
 
 
 We explain some of the some required arguments below. 
