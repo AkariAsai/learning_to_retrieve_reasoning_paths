@@ -7,7 +7,7 @@ The model is the same as our proposed graph retriever model to retrieve reasonin
 We use `run_sequential_sentence_selector.py` to train the model.
 Basically, the overall code is based on that of our graph retriever.
 Here is an example command used for our paper.
-Since we used `pytorch-pretrained-bsed` to develop our models, we cannot directly use the BERT-whole-word-masking configurations.
+Since we used `pytorch-pretrained-bert` to develop our models, we cannot directly use the BERT-whole-word-masking configurations.
 However, we have a way to use, for example, `bert-large-uncased-whole-word-masking` when we have `pytorch-transformers` in our env.
 Refer to `./utils.py` for this trick.
 
